@@ -1,18 +1,44 @@
+'use strict';
+
 const jwt = require('jsonwebtoken');
 
+/**
+ * authMiddleware — JWT access token validation middleware.
+ * Extracts Bearer token from Authorization header, verifies it,
+ * and attaches decoded payload to req.user.
+ *
+ * Returns 401 if token is missing or invalid.
+ */
 const authMiddleware = (req, res, next) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    
-    if (!token) {
-      return res.status(401).json({ message: 'Authentication required. No token provided.' });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        data: null,
+        message: 'Authentication required. No token provided.',
+      });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
-    req.user = decoded;
+    const token = authHeader.split(' ')[1];
+    const JWT_SECRET = process.env.JWT_SECRET || 'taskflow_access_secret';
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded; // { userId, iat, exp }
     next();
   } catch (error) {
-    return res.status(401).json({ message: 'Invalid or expired token.' });
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        data: null,
+        message: 'Access token has expired. Please refresh your token.',
+      });
+    }
+    return res.status(401).json({
+      success: false,
+      data: null,
+      message: 'Invalid token. Authentication failed.',
+    });
   }
 };
 

@@ -1,23 +1,2 @@
-const prisma = require('../config/db');
-
-class UserRepository {
-  async findByEmail(email) {
-    return prisma.user.findUnique({
-      where: { email },
-    });
-  }
-
-  async findById(id) {
-    return prisma.user.findUnique({
-      where: { id },
-    });
-  }
-
-  async create(userData) {
-    return prisma.user.create({
-      data: userData,
-    });
-  }
-}
-
-module.exports = new UserRepository();
+// Re-export from the canonical PascalCase file (backwards compatibility)
+module.exports = require('./UserRepository');

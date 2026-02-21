@@ -1,8 +1,14 @@
+'use strict';
+
+// Load environment variables FIRST before any other imports
 require('dotenv').config();
+
 const app = require('./app');
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`\n🚀 TaskFlow API server running on port ${PORT}`);
+  console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`   Health check: http://localhost:${PORT}/health\n`);
 });
