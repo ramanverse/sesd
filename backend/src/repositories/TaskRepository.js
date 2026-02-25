@@ -35,6 +35,17 @@ class TaskRepository extends BaseRepository {
     return prisma.task.delete({ where: { id } });
   }
 
+  /**
+   * Update task status (cycles through PENDING -> IN_PROGRESS -> DONE).
+   */
+  async updateStatus(id, userId, newStatus) {
+    return prisma.task.update({
+      where: { id, userId },
+      data: { status: newStatus },
+      include: { category: true },
+    });
+  }
+
   // --- TaskRepository-specific methods ---
 
   /**
@@ -43,11 +54,33 @@ class TaskRepository extends BaseRepository {
    * @param {object} filters - Additional Prisma where conditions
    */
   async findAllByUser(userId, filters = {}) {
-    const where = { userId, ...filters };
+    const where = { userId, isArchived: false, ...filters };
     return prisma.task.findMany({
       where,
       include: { category: true },
       orderBy: { dueDate: 'asc' },
+    });
+  }
+
+  /**
+   * Find all archived tasks for a user.
+   */
+  async findArchivedByUser(userId) {
+    return prisma.task.findMany({
+      where: { userId, isArchived: true },
+      include: { category: true },
+      orderBy: { updatedAt: 'desc' },
+    });
+  }
+
+  /**
+   * Toggle archive status of a task.
+   */
+  async archive(id, userId, isArchived = true) {
+    return prisma.task.update({
+      where: { id, userId },
+      data: { isArchived },
+      include: { category: true },
     });
   }
 
@@ -73,7 +106,7 @@ class TaskRepository extends BaseRepository {
    * Count tasks by status for a given user.
    */
   async countByStatus(userId) {
-    const tasks = await prisma.task.findMany({ where: { userId } });
+    const tasks = await prisma.task.findMany({ where: { userId, isArchived: false } });
     const now = new Date();
     let total = 0, pending = 0, inProgress = 0, done = 0, overdue = 0;
 
@@ -87,7 +120,15 @@ class TaskRepository extends BaseRepository {
           t.status !== 'Done' && t.status !== 'DONE') overdue++;
     }
 
-    return { total, pending, inProgress, done, overdue };
+    const completionRate = total > 0 ? Math.round((done / total) * 100) : 0;
+
+    // Hardcoded "Upcoming Syncs" for now as per requirement
+    const upcomingSyncs = [
+      { id: 1, title: 'Engineering Weekly', time: 'Tomorrow, 10:00 AM' },
+      { id: 2, title: 'Product Review', time: 'Friday, 2:00 PM' }
+    ];
+
+    return { total, pending, inProgress, done, overdue, completionRate, upcomingSyncs };
   }
 }
 

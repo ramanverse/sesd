@@ -20,6 +20,7 @@ class Task extends BaseEntity {
   #userId;
   #categoryId;
   #category; // populated relation
+  #isArchived;
 
   constructor({
     id,
@@ -31,6 +32,7 @@ class Task extends BaseEntity {
     userId,
     categoryId = null,
     category = null,
+    isArchived = false,
     createdAt,
     updatedAt,
   } = {}) {
@@ -44,6 +46,7 @@ class Task extends BaseEntity {
     this.#userId = userId;
     this.#categoryId = categoryId;
     this.#category = category;
+    this.#isArchived = isArchived;
   }
 
   // --- Getters ---
@@ -55,6 +58,7 @@ class Task extends BaseEntity {
   get userId() { return this.#userId; }
   get categoryId() { return this.#categoryId; }
   get category() { return this.#category; }
+  get isArchived() { return this.#isArchived; }
 
   // --- Setters ---
   set title(value) {
@@ -83,6 +87,7 @@ class Task extends BaseEntity {
 
   set dueDate(value) { this.#dueDate = value ? new Date(value) : null; }
   set categoryId(value) { this.#categoryId = value || null; }
+  set isArchived(value) { this.#isArchived = !!value; }
 
   /**
    * Whether the task is overdue (past due date and not done).
@@ -102,6 +107,7 @@ class Task extends BaseEntity {
       userId: this.#userId,
       categoryId: this.#categoryId,
       category: this.#category,
+      isArchived: this.#isArchived,
     };
   }
 
@@ -120,6 +126,7 @@ class Task extends BaseEntity {
       userId: record.userId,
       categoryId: record.categoryId,
       category: record.category,
+      isArchived: record.isArchived,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
