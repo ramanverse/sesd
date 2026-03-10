@@ -8,7 +8,7 @@ const categoryService = require('../services/category.service');
 class DashboardController {
   /**
    * GET /api/dashboard
-   * Returns: { total, pending, inProgress, done, overdue }
+   * Returns: { total, pending, inProgress, done, overdue, completionRate, upcomingSyncs }
    */
   async getStats(req, res) {
     try {

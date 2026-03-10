@@ -109,12 +109,51 @@ class TaskService {
   }
 
   /**
+   * Cycle task status: Pending -> In Progress -> Done -> Pending.
+   */
+  async cycleStatus(id, userId) {
+    const existing = await taskRepository.findByUserAndId(id, userId);
+    if (!existing) throw new Error('Task not found or you do not have permission to update it.');
+
+    const statusMap = {
+      'Pending': 'In Progress',
+      'In Progress': 'Done',
+      'Done': 'Pending'
+    };
+
+    const currentStatus = existing.status;
+    const nextStatus = statusMap[currentStatus] || 'Pending';
+
+    const record = await taskRepository.updateStatus(id, userId, nextStatus);
+    return TaskFactory.fromPrisma(record).toJSON();
+  }
+
+  /**
    * Delete a task. Verifies ownership before deletion.
    */
   async deleteTask(id, userId) {
     const existing = await taskRepository.findByUserAndId(id, userId);
     if (!existing) throw new Error('Task not found or you do not have permission to delete it.');
     await taskRepository.delete(id);
+  }
+
+  /**
+   * Get archived tasks for a user.
+   */
+  async getArchivedTasks(userId) {
+    const records = await taskRepository.findArchivedByUser(userId);
+    return TaskFactory.fromPrismaMany(records).map(t => t.toJSON());
+  }
+
+  /**
+   * Move task to archive or restore it.
+   */
+  async archiveTask(id, userId, isArchived = true) {
+    const existing = await taskRepository.findByUserAndId(id, userId);
+    if (!existing) throw new Error('Task not found or you do not have permission to archive it.');
+    
+    const record = await taskRepository.archive(id, userId, isArchived);
+    return TaskFactory.fromPrisma(record).toJSON();
   }
 
   // --- Private helpers for Prisma value normalization ---
