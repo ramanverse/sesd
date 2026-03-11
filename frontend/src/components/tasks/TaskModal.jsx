@@ -36,7 +36,8 @@ const TaskModal = ({ isOpen, onClose, task, onSave }) => {
   const fetchCategories = async () => {
     try {
       const res = await api.get('/categories');
-      setCategories(res.data);
+      const data = res.data.data ?? res.data;
+      setCategories(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to fetch categories');
     }

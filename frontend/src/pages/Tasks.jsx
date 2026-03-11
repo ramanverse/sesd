@@ -21,7 +21,8 @@ const Tasks = () => {
   const fetchTasks = async () => {
     try {
       const res = await api.get('/tasks');
-      setTasks(res.data);
+      const data = res.data.data ?? res.data;
+      setTasks(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
     }
@@ -29,7 +30,7 @@ const Tasks = () => {
 
   const completeTask = async (id) => {
     try {
-      await api.put(`/tasks/${id}`, { status: 'Done' });
+      await api.patch(`/tasks/${id}/complete`);
       fetchTasks();
     } catch (err) {
       console.error(err);
