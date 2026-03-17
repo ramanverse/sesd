@@ -133,8 +133,10 @@ class AuthService {
    * @private
    */
   async _generateTokenPair(userId) {
+    const { randomUUID } = require('crypto');
     const accessToken = jwt.sign({ userId }, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRY });
-    const refreshToken = jwt.sign({ userId }, JWT_REFRESH_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRY });
+    // jti (JWT ID) ensures every refresh token is unique even if issued in the same second
+    const refreshToken = jwt.sign({ userId, jti: randomUUID() }, JWT_REFRESH_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRY });
 
     const expiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRY_MS);
 
