@@ -4,7 +4,7 @@ require('dotenv').config();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../config/db');
-const userRepository = require('../repositories/user.repository');
+const userRepository = require('../repositories/UserRepository');
 const RegisterDTO = require('../dto/RegisterDTO');
 const LoginDTO = require('../dto/LoginDTO');
 const User = require('../models/User');

@@ -1,6 +1,6 @@
 'use strict';
 
-const taskRepository = require('../repositories/task.repository');
+const taskRepository = require('../repositories/TaskRepository');
 const TaskFactory = require('../models/TaskFactory');
 const TaskDTO = require('../dto/TaskDTO');
 

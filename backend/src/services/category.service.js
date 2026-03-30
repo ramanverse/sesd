@@ -1,7 +1,7 @@
 'use strict';
 
-const categoryRepository = require('../repositories/category.repository');
-const taskRepository = require('../repositories/task.repository');
+const categoryRepository = require('../repositories/CategoryRepository');
+const taskRepository = require('../repositories/TaskRepository');
 const CategoryDTO = require('../dto/CategoryDTO');
 const Category = require('../models/Category');
 
