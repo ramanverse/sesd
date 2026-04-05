@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
-import api from '../../api/axios';
+import { useTasks } from '../../context/TaskContext';
+import { useCategories } from '../../context/CategoryContext';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 
-const TaskModal = ({ isOpen, onClose, task, onSave }) => {
+const TaskModal = ({ isOpen, onClose, task }) => {
+  const { createTask, updateTask } = useTasks();
+  const { categories } = useCategories();
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('Medium');
@@ -11,11 +15,10 @@ const TaskModal = ({ isOpen, onClose, task, onSave }) => {
   const [dueDate, setDueDate] = useState('');
   const [categoryId, setCategoryId] = useState('');
   
-  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      fetchCategories();
       if (task) {
         setTitle(task.title);
         setDescription(task.description || '');
@@ -34,16 +37,6 @@ const TaskModal = ({ isOpen, onClose, task, onSave }) => {
     }
   }, [isOpen, task]);
 
-  const fetchCategories = async () => {
-    try {
-      const res = await api.get('/categories');
-      const data = res.data.data ?? res.data;
-      setCategories(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Failed to fetch categories');
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     const taskData = {
@@ -55,15 +48,18 @@ const TaskModal = ({ isOpen, onClose, task, onSave }) => {
       categoryId: categoryId || null
     };
 
+    setLoading(true);
     try {
       if (task) {
-        await api.put(`/tasks/${task.id}`, taskData);
+        await updateTask(task.id, taskData);
       } else {
-        await api.post('/tasks', taskData);
+        await createTask(taskData);
       }
-      onSave();
+      onClose();
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -146,7 +142,9 @@ const TaskModal = ({ isOpen, onClose, task, onSave }) => {
         
         <div className="pt-4 border-t border-gray-100 flex justify-end gap-3 mt-8">
           <Button variant="secondary" onClick={onClose} type="button">Cancel</Button>
-          <Button variant="primary" type="submit">{task ? 'Save Changes' : 'Create Task'}</Button>
+          <Button variant="primary" type="submit" disabled={loading}>
+            {loading ? (task ? 'Saving...' : 'Creating...') : (task ? 'Save Changes' : 'Create Task')}
+          </Button>
         </div>
       </form>
     </Modal>
