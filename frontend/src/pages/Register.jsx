@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import useAuthStore from '../store/useAuthStore';
-import api from '../api/axios';
+import { useAuth } from '../context/AuthContext';
+import LoadingSpinner from '../components/common/LoadingSpinner';
 
 const Register = () => {
-  const { isAuthenticated } = useAuthStore();
+  const { register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -26,11 +27,13 @@ const Register = () => {
       return setError('Passwords do not match');
     }
 
+    setLoading(true);
     try {
-      await api.post('/auth/register', { name, email, password });
-      navigate('/login');
+      await register(name, email, password);
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -55,7 +58,11 @@ const Register = () => {
             <p className="text-gray-500">Join TaskFlow to master your tasks</p>
           </div>
 
-          {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm text-center border border-red-200">{error}</div>}
+          {error && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm text-center border border-red-200 animate-shake">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
@@ -89,6 +96,7 @@ const Register = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={6}
               />
             </div>
             <div>
@@ -103,14 +111,18 @@ const Register = () => {
               />
             </div>
             
-            <button type="submit" className="w-full btn-primary text-lg shadow-lg hover:shadow-xl py-3 transform transition-all active:scale-95">
-              Sign Up
+            <button 
+              type="submit" 
+              disabled={loading}
+              className={`w-full btn-primary text-lg shadow-lg hover:shadow-xl py-3 transform transition-all active:scale-95 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            >
+              {loading ? <LoadingSpinner color="white" /> : 'Sign Up'}
             </button>
           </form>
 
           <div className="mt-8 flex items-center justify-between">
             <hr className="w-full border-gray-200" />
-            <span className="p-2 text-gray-400 text-sm">or</span>
+            <span className="p-2 text-gray-400 text-sm">or continue with</span>
             <hr className="w-full border-gray-200" />
           </div>
 
@@ -121,7 +133,7 @@ const Register = () => {
             </button>
             <button className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm bg-white hover:bg-gray-50 text-sm font-medium text-gray-700 transition">
               <svg className="h-5 w-5 mr-2 text-black" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12.873 13.921c... (Apple Logo SVG omitted for brevity it will just be an icon)" /> 
+                <path d="M12.873 13.921c-0.247-0.038-0.341-0.081-0.455-0.155s-0.204-0.171-0.253-0.283c-0.153-0.351-0.153-1.042 0-1.393c0.049-0.112 0.139-0.209 0.253-0.283s0.208-0.117 0.455-0.155c0.237-0.036 0.286-0.036 0.522 0s0.285 0.036 0.522 0.073l0.253 0.04c0.126 0.021 0.219 0.052 0.311 0.101s0.174 0.113 0.237 0.19c0.124 0.151 0.186 0.329 0.186 0.534s-0.062 0.383-0.186 0.534c-0.063 0.077-0.145 0.141-0.237 0.19s-0.185 0.08-0.311 0.101l-0.253 0.04c-0.237 0.037-0.286 0.037-0.522 0.073z" />
               </svg>
               Apple
             </button>
@@ -130,7 +142,7 @@ const Register = () => {
           <p className="mt-8 text-center text-sm text-gray-600">
             Already have an account?{' '}
             <Link to="/login" className="text-primary hover:text-primary-dark font-medium underline">
-              Login
+              Sign In
             </Link>
           </p>
         </div>

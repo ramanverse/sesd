@@ -2,12 +2,12 @@ import React from 'react';
 
 const Badge = ({ variant = 'pending', children }) => {
   const variants = {
-    low: "bg-green-100 text-green-800",
-    medium: "bg-yellow-100 text-yellow-800",
-    high: "bg-red-100 text-red-800",
-    pending: "bg-gray-100 text-gray-800",
-    in_progress: "bg-blue-100 text-blue-800",
-    done: "bg-green-100 text-green-800"
+    low: "bg-green-50 text-green-700 border border-green-100",
+    medium: "bg-yellow-50 text-yellow-700 border border-yellow-100",
+    high: "bg-red-50 text-red-700 border border-red-100",
+    pending: "bg-orange-50 text-orange-700 border border-orange-100",
+    in_progress: "bg-indigo-50 text-primary border border-indigo-100",
+    done: "bg-green-50 text-green-700 border border-green-100"
   };
 
   return (
