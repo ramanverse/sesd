@@ -33,3 +33,7 @@ TaskFlow is a premium, full-stack task management web application built with Rea
 1. `cd frontend`
 2. `npm install`
 3. `npm run dev` to start on port 5173.
+
+
+### Deployed Link
+https://sesd-frontend.onrender.com/login
