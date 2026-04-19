@@ -4,6 +4,7 @@ import useAuthStore from './store/useAuthStore';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
+import Categories from './pages/Categories';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 
@@ -36,7 +37,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
-        {/* We will add Categories and Archive later */}
+        <Route path="/categories" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
+        {/* We will add Archive later */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

@@ -1,13 +1,18 @@
 import { useState, useEffect } from 'react';
 import useAuthStore from '../store/useAuthStore';
 import api from '../api/axios';
-import { Filter, Calendar as CalIcon, Search, MoreHorizontal, Check, Plus } from 'lucide-react';
+import { Filter, Calendar as CalIcon, Search, Check, Plus, Trash2, Edit2 } from 'lucide-react';
 import { format } from 'date-fns';
+import TaskModal from '../components/tasks/TaskModal';
 
 const Tasks = () => {
   const [tasks, setTasks] = useState([]);
   const [filterPriority, setFilterPriority] = useState('All Priorities');
   const [filterStatus, setFilterStatus] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
 
   useEffect(() => {
     fetchTasks();
@@ -31,6 +36,31 @@ const Tasks = () => {
     }
   };
 
+  const deleteTask = async (id) => {
+    if(!window.confirm('Are you sure you want to delete this task?')) return;
+    try {
+      await api.delete(`/tasks/${id}`);
+      fetchTasks();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleEdit = (task) => {
+    setSelectedTask(task);
+    setIsModalOpen(true);
+  };
+
+  const handleCreate = () => {
+    setSelectedTask(null);
+    setIsModalOpen(true);
+  };
+
+  const onModalSave = () => {
+    setIsModalOpen(false);
+    fetchTasks();
+  };
+
   const getPriorityColor = (priority) => {
     switch(priority) {
       case 'High': return 'text-red-700 bg-red-100 border-red-200';
@@ -51,6 +81,7 @@ const Tasks = () => {
   const filteredTasks = tasks.filter(t => {
     if (filterPriority !== 'All Priorities' && t.priority !== filterPriority) return false;
     if (filterStatus !== 'All' && t.status !== filterStatus) return false;
+    if (searchQuery && !t.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
 
@@ -60,7 +91,17 @@ const Tasks = () => {
         {/* Header & Filters */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Priority Queue</h1>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            <div className="flex items-center bg-white border border-gray-200 rounded-lg px-3 py-2 w-64 shadow-sm focus-within:ring-2 focus-within:ring-primary focus-within:border-primary">
+              <Search className="w-4 h-4 text-gray-400" />
+              <input 
+                type="text"
+                placeholder="Search tasks..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="ml-2 w-full text-sm outline-none bg-transparent"
+              />
+            </div>
             <select 
               value={filterPriority} 
               onChange={e => setFilterPriority(e.target.value)}
@@ -81,10 +122,6 @@ const Tasks = () => {
               <option>In Progress</option>
               <option>Done</option>
             </select>
-            <button className="flex items-center px-4 py-2 border border-gray-200 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm hover:bg-gray-50 transition">
-              <Filter className="w-4 h-4 mr-2" />
-              More
-            </button>
           </div>
         </div>
 
@@ -97,18 +134,23 @@ const Tasks = () => {
                   <Check className="w-12 h-12 text-green-500 opacity-50" />
                 </div>
               )}
-              <div className="flex justify-between items-start mb-3">
+              <div className="flex justify-between items-start mb-3 z-20 relative">
                 <span className={`text-xs font-semibold px-2 py-1 rounded border ${getPriorityColor(task.priority)}`}>
                   {task.priority.toUpperCase()}
                 </span>
-                <button className="text-gray-400 hover:text-gray-600 transition">
-                  <MoreHorizontal className="w-5 h-5" />
-                </button>
+                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => handleEdit(task)} className="text-gray-400 hover:text-blue-500 transition">
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => deleteTask(task.id)} className="text-gray-400 hover:text-red-500 transition">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-              <h3 className="font-bold text-gray-900 mb-1 leading-snug truncate">{task.title}</h3>
-              <p className="text-sm text-gray-500 mb-4 line-clamp-2">{task.description}</p>
+              <h3 className="font-bold text-gray-900 mb-1 leading-snug truncate z-20 relative">{task.title}</h3>
+              <p className="text-sm text-gray-500 mb-4 line-clamp-2 z-20 relative">{task.description}</p>
               
-              <div className="flex justify-between items-center mt-auto pt-4 border-t border-gray-100">
+              <div className="flex justify-between items-center mt-auto pt-4 border-t border-gray-100 z-20 relative">
                 <span className="flex items-center text-xs font-medium text-gray-600">
                   <CalIcon className="w-4 h-4 mr-1 text-gray-400" />
                   {task.dueDate ? format(new Date(task.dueDate), 'MMM dd') : 'No set date'}
@@ -121,10 +163,10 @@ const Tasks = () => {
               </div>
 
               {task.status !== 'Done' && (
-                <div className="absolute opacity-0 group-hover:opacity-100 bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-white via-white to-transparent transition-opacity flex justify-end z-20">
+                <div className="absolute opacity-0 group-hover:opacity-100 bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-white via-white to-transparent transition-opacity flex justify-end z-20 pointer-events-none">
                   <button 
                     onClick={() => completeTask(task.id)}
-                    className="flex text-xs font-bold items-center bg-green-500 text-white px-3 py-1.5 rounded hover:bg-green-600 shadow-sm transition"
+                    className="flex text-xs font-bold items-center bg-green-500 text-white px-3 py-1.5 rounded hover:bg-green-600 shadow-sm transition pointer-events-auto"
                   >
                     <Check className="w-3 h-3 mr-1" />
                     Complete
@@ -160,9 +202,19 @@ const Tasks = () => {
       </div>
 
       {/* Floating Action Button */}
-      <button className="fixed bottom-8 right-8 w-14 h-14 bg-primary text-white rounded-full shadow-xl shadow-primary/30 flex items-center justify-center hover:scale-105 hover:bg-primary-dark transition-all z-50">
+      <button 
+        onClick={handleCreate}
+        className="fixed bottom-8 right-8 w-14 h-14 bg-primary text-white rounded-full shadow-xl shadow-primary/30 flex items-center justify-center hover:scale-105 hover:bg-primary-dark transition-all z-40"
+      >
         <Plus className="w-6 h-6" />
       </button>
+
+      <TaskModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        task={selectedTask} 
+        onSave={onModalSave} 
+      />
     </div>
   );
 };
